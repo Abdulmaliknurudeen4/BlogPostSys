@@ -1,5 +1,6 @@
 package com.intreswitch.articleblogsystemintv.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
@@ -16,12 +17,13 @@ public class Author {
     private Integer authorId;
     @Column(name = "author_name")
     private String name;
-    @Column(name = "author_email")
+    @Column(name = "author_email", unique = true)
     private String email;
     @Column(name = "password")
     private String password;
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
+    @JsonIgnore
     private Set<Post> authorPosts = new HashSet<>();
 
     @Override

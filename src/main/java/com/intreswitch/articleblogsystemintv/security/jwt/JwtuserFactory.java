@@ -5,14 +5,13 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class JwtuserFactory {
 	public static JwtUserPrincipal create(Author author) {
 		return new JwtUserPrincipal(author.getAuthorId(), author.getEmail(), author.getPassword(), author,
-				maptoGrantedAuthorities(new ArrayList<String>(Arrays.asList("ROLE_AUTHOR"))),
+				maptoGrantedAuthorities(new ArrayList<>(List.of("ROLE_AUTHOR"))),
 				true);
 	}
 

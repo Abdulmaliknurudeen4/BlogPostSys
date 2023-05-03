@@ -1,5 +1,6 @@
 package com.intreswitch.articleblogsystemintv.security;
 
+import com.intreswitch.articleblogsystemintv.security.jwt.CsrfHeaderFilter;
 import com.intreswitch.articleblogsystemintv.security.jwt.JwtAuthenticationEntryPoint;
 import com.intreswitch.articleblogsystemintv.security.jwt.JwtAuthenticationTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -50,6 +53,7 @@ public class WebSecurityConfig implements Serializable {
         return new CorsFilter(source);
 
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -62,21 +66,26 @@ public class WebSecurityConfig implements Serializable {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         return http
+                .addFilterBefore(jwtAuthenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new CsrfHeaderFilter(), CsrfFilter.class)
+
                 .csrf(AbstractHttpConfigurer::disable)
+                .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                .and()
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests()
-                .requestMatchers("/**")
-                .permitAll().and().build();
+                .authorizeHttpRequests().requestMatchers("/AuthenticationController/login").permitAll()
+                .requestMatchers("/AuthorController/registration").permitAll()
+                .requestMatchers("/PostController/allPost").permitAll()
+                .anyRequest()
+                .authenticated()
+                .and()
+                .headers().cacheControl()
+                .and().and()
+                .headers().httpStrictTransportSecurity().includeSubDomains(true).maxAgeInSeconds(31536000).and().and().build();
     }
 
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
 
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http,
@@ -86,5 +95,13 @@ public class WebSecurityConfig implements Serializable {
         return http.getSharedObject(AuthenticationManagerBuilder.class)
                 .authenticationProvider(authenticationProvider())
                 .build();
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 }
