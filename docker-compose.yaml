@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: postgres
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: blogSys
+    volumes:
+      - postgresVolume:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - pg-network
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: abdulmalik@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - "5050:5050"
+    networks:
+      - pg-network
+volumes:
+  postgresVolume:
+
+networks:
+  pg-network:
